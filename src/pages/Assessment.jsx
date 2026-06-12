@@ -322,6 +322,7 @@ const Assessment = () => {
          totalAttempted: totalAttempted,
          totalCorrect: totalCorrect,
          totalWrong: totalWrong,
+         totalMarks: totalPossible,
          detailedAnswers: detailedAnswers,
          submittedAt: new Date().toISOString()
       };
@@ -334,7 +335,7 @@ const Assessment = () => {
       localStorage.removeItem('assessment_section');
 
       toast.success('Assessment Submitted Successfully');
-      navigate('/completed');
+      navigate('/completed', { state: { totalScore: totalCorrect, maxScore: totalPossible } });
     } catch (error) {
       console.error("Submission failed", error);
       toast.error("Failed to submit assessment. Please try again.");
