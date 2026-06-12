@@ -54,15 +54,15 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-slate-900 to-black p-4">
-      <div className="max-w-md w-full glass p-8 rounded-2xl animate-fade-in">
-        <div className="text-center mb-8">
+      <div className="max-w-md w-full glass p-6 sm:p-8 rounded-2xl animate-fade-in">
+        <div className="text-center mb-6 sm:mb-8">
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-secondary/10 rounded-full">
-              <ShieldCheck className="w-12 h-12 text-secondary" />
+              <ShieldCheck className="w-10 h-10 sm:w-12 sm:h-12 text-secondary" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-slate-800">TechMasters</h1>
-          <p className="text-slate-500 mt-2">Assessment Portal Login</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">TechMasters</h1>
+          <p className="text-sm sm:text-base text-slate-500 mt-2">Assessment Portal Login</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">

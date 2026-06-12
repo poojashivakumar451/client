@@ -311,14 +311,36 @@ const Assessment = () => {
 
   return (
     <div className="flex h-screen bg-[#F5F7F8] font-sans overflow-hidden select-none" style={{ userSelect: 'none' }}>
+      {/* SIDEBAR BACKDROP FOR MOBILE/TABLET */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR */}
-      <div className={`${isSidebarOpen ? 'w-80' : 'w-0'} bg-white border-r border-slate-200 transition-all flex flex-col`}>
+      <div 
+        className={`fixed inset-y-0 left-0 z-50 lg:relative flex flex-col bg-white border-r border-slate-200 transition-all duration-300
+          ${isSidebarOpen 
+            ? 'w-80 translate-x-0' 
+            : 'w-80 -translate-x-full lg:translate-x-0 lg:w-0 lg:overflow-hidden'
+          }`}
+      >
         {isSidebarOpen && (
           <>
-            <div className="p-6 border-b border-slate-100">
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Student</p>
-              <p className="text-xs font-bold text-slate-700 truncate">techmasterstrainings@gmail.com</p>
-              <p className="text-[10px] text-slate-400 mt-1">+91-9880768222</p>
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <div>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Student</p>
+                <p className="text-xs font-bold text-slate-700 truncate max-w-[180px]">techmasterstrainings@gmail.com</p>
+                <p className="text-[10px] text-slate-400 mt-1">+91-9880768222</p>
+              </div>
+              <button 
+                onClick={() => setIsSidebarOpen(false)}
+                className="lg:hidden p-2 hover:bg-slate-100 rounded-full text-slate-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             <div className="p-6 flex items-center gap-3 text-slate-700">
@@ -349,7 +371,12 @@ const Assessment = () => {
                   return (
                     <button
                       key={i}
-                      onClick={() => setCurrentQuestionIdx(i)}
+                      onClick={() => {
+                        setCurrentQuestionIdx(i);
+                        if (window.innerWidth < 1024) {
+                          setIsSidebarOpen(false);
+                        }
+                      }}
                       className={`h-9 w-full rounded flex items-center justify-center text-xs transition-all ${bgColor}`}
                     >
                       {i + 1}
@@ -394,27 +421,27 @@ const Assessment = () => {
       </div>
 
       {/* MAIN */}
-      <div className="flex-1 flex flex-col relative text-slate-800">
-        <header className="h-16 bg-white border-b border-slate-200 px-8 flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-4">
+      <div className="flex-1 flex flex-col relative text-slate-800 min-w-0">
+        <header className="h-16 bg-white border-b border-slate-200 px-4 sm:px-8 flex justify-between items-center shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-50 rounded-full transition-colors"><Menu className="w-5 h-5 text-slate-500" /></button>
-            <h1 className="text-xl font-bold text-slate-800 tracking-tight">Test : <span className="text-slate-400 font-mono">TechMasters</span></h1>
+            <h1 className="text-base sm:text-xl font-bold text-slate-800 tracking-tight">Test : <span className="text-slate-400 font-mono">TechMasters</span></h1>
           </div>
           <div />
         </header>
 
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
           <div className="max-w-5xl mx-auto">
-            <div className="flex items-center gap-6 mb-8 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-8 text-xs font-bold uppercase tracking-wider text-slate-400 flex-wrap">
               <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Correct : <span className="text-emerald-600">+ 4 marks</span></div>
               <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-400"></div>Incorrect : <span className="text-red-500">- 1 marks</span></div>
             </div>
 
             {currentQuestion.type === 'mcq' ? (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h4 className="text-xl font-black text-slate-800 mb-4">Question {currentQuestionIdx + 1}</h4>
-                <p className="text-slate-600 text-lg leading-relaxed mb-10 p-6 bg-white rounded-2xl shadow-sm border border-slate-100">{currentQuestion.text}</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h4 className="text-lg sm:text-xl font-black text-slate-800 mb-4">Question {currentQuestionIdx + 1}</h4>
+                <p className="text-sm sm:text-base md:text-lg text-slate-600 leading-relaxed mb-6 sm:mb-10 p-4 sm:p-6 bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-100">{currentQuestion.text}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   {currentQuestion.options.map((option, idx) => {
                     const isSelected = answers[questionKey] === idx;
                     const isCorrect = currentQuestion.correct === idx;
@@ -427,28 +454,28 @@ const Assessment = () => {
                       else { style = 'border-slate-100 bg-slate-50 text-slate-300 opacity-50'; }
                     } else if (isSelected) { style = 'border-indigo-500 bg-indigo-50'; }
                     return (
-                      <button key={idx} onClick={() => handleOptionSelect(idx)} disabled={showFeedback} className={`p-6 rounded-2xl text-left flex items-center justify-between transition-all border-2 shadow-sm ${style}`}>
-                        <div className="flex items-center gap-4">
-                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${showFeedback ? 'border-white' : 'border-slate-200'}`}>
-                            {(isSelected || (showFeedback && isCorrect)) && <div className={`w-3 h-3 rounded-full ${showFeedback ? 'bg-white' : 'bg-indigo-600'}`} />}
+                      <button key={idx} onClick={() => handleOptionSelect(idx)} disabled={showFeedback} className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl text-left flex items-center justify-between transition-all border-2 shadow-sm gap-2 ${style}`}>
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${showFeedback ? 'border-white' : 'border-slate-200'}`}>
+                            {(isSelected || (showFeedback && isCorrect)) && <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${showFeedback ? 'bg-white' : 'bg-indigo-600'}`} />}
                           </div>
-                          <span className="text-lg font-bold">{option}</span>
+                          <span className="text-sm sm:text-base md:text-lg font-bold">{option}</span>
                         </div>
                         {icon}
-                        {showFeedback && <span className="text-[10px] font-black opacity-30 tracking-widest">{isCorrect ? '33.63%' : '26.27%'}</span>}
+                        {showFeedback && <span className="text-[10px] font-black opacity-30 tracking-widest shrink-0">{isCorrect ? '33.63%' : '26.27%'}</span>}
                       </button>
                     );
                   })}
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-6 h-[calc(100vh-250px)]">
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm"><h4 className="text-xl font-black text-slate-800 mb-2">{currentQuestion.title}</h4><p className="text-slate-600 leading-relaxed text-sm">{currentQuestion.text}</p></div>
+              <div className="flex flex-col gap-4 sm:gap-6 h-[calc(100vh-220px)] lg:h-[calc(100vh-250px)] min-h-[400px]">
+                <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm"><h4 className="text-lg sm:text-xl font-black text-slate-800 mb-2">{currentQuestion.title}</h4><p className="text-slate-600 leading-relaxed text-xs sm:text-sm">{currentQuestion.text}</p></div>
                 <div className="flex-1 flex gap-6 min-h-0">
-                  <div className="flex-1 bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-2xl">
+                  <div className="flex-1 bg-slate-900 rounded-xl sm:rounded-2xl overflow-hidden border border-slate-800 flex flex-col shadow-2xl">
                     <div className="px-4 py-2 bg-slate-800 flex justify-between items-center"><div className="flex items-center gap-2"><Terminal className="w-4 h-4 text-emerald-400" /><span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Editor</span></div></div>
                     <div className="flex-1 border-t border-slate-800"><Editor height="100%" language={language} theme="vs-dark" value={userCode} onChange={setUserCode} options={{ minimap: { enabled: false }, fontSize: 14 }} /></div>
-                    <div className="p-4 bg-slate-800 flex justify-end"><button onClick={handleRunCode} disabled={isRunning} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition-all disabled:opacity-50">{isRunning ? 'Executing...' : <><Play className="w-4 h-4" /> Run Test Cases</>}</button></div>
+                    <div className="p-4 bg-slate-800 flex justify-end"><button onClick={handleRunCode} disabled={isRunning} className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 sm:px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition-all text-sm disabled:opacity-50">{isRunning ? 'Executing...' : <><Play className="w-4 h-4" /> Run Test Cases</>}</button></div>
                   </div>
                 </div>
               </div>
@@ -456,14 +483,33 @@ const Assessment = () => {
           </div>
         </main>
 
-        <footer className="h-20 bg-white border-t border-slate-200 px-10 flex items-center justify-between shrink-0">
+        <footer className="h-20 bg-white border-t border-slate-200 px-4 sm:px-10 flex items-center justify-between shrink-0">
           <div className="flex gap-4">
-            <button onClick={handleToggleFlag} className={`px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all ${flagged.has(questionKey) ? 'bg-red-50 text-red-600 border-red-200 border-2' : 'bg-slate-50 text-slate-500'}`}><Flag className="w-4 h-4" /> Mark Review</button>
+            <button onClick={handleToggleFlag} className={`px-4 sm:px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all ${flagged.has(questionKey) ? 'bg-red-50 text-red-600 border-red-200 border-2' : 'bg-slate-50 text-slate-500'}`}>
+              <Flag className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Mark Review</span>
+            </button>
           </div>
-          <div className="flex gap-4">
-            {currentQuestionIdx > 0 && <button onClick={() => setCurrentQuestionIdx(currentQuestionIdx - 1)} className="px-6 py-2.5 text-slate-500 font-bold flex items-center gap-2"><ChevronLeft className="w-5 h-5" /> Previous</button>}
-            <button onClick={handleNext} className="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-2.5 rounded-xl font-black shadow-lg shadow-indigo-100 flex items-center gap-2 transition-all transform hover:scale-105">
-              {currentSectionIdx === sections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? 'SUBMIT ASSESSMENT' : 'Save & Next'} <ChevronRight className="w-5 h-5" />
+          <div className="flex gap-2 sm:gap-4">
+            {currentQuestionIdx > 0 && (
+              <button onClick={() => setCurrentQuestionIdx(currentQuestionIdx - 1)} className="px-3 sm:px-6 py-2.5 text-slate-500 font-bold flex items-center gap-1 sm:gap-2">
+                <ChevronLeft className="w-5 h-5 shrink-0" />
+                <span className="hidden sm:inline">Previous</span>
+              </button>
+            )}
+            <button onClick={handleNext} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 sm:px-10 py-2.5 rounded-xl font-black shadow-lg shadow-indigo-100 flex items-center gap-1 sm:gap-2 transition-all transform hover:scale-105 text-sm sm:text-base">
+              {currentSectionIdx === sections.length - 1 && currentQuestionIdx === currentSection.questions.length - 1 ? (
+                <>
+                  <span className="hidden sm:inline">SUBMIT ASSESSMENT</span>
+                  <span className="sm:hidden">SUBMIT</span>
+                </>
+              ) : (
+                <>
+                  <span className="hidden sm:inline">Save & Next</span>
+                  <span className="sm:hidden">Next</span>
+                </>
+              )}
+              <ChevronRight className="w-5 h-5 shrink-0" />
             </button>
           </div>
         </footer>
