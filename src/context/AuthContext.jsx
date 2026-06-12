@@ -25,6 +25,13 @@ export const AuthProvider = ({ children }) => {
       return; 
     }
 
+    const studentUser = sessionStorage.getItem('studentUser');
+    if (studentUser) {
+      setCurrentUser(JSON.parse(studentUser));
+      setLoading(false);
+      return; 
+    }
+
     // Standard Firebase Flow
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {

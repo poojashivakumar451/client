@@ -7,28 +7,33 @@ import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import API_BASE_URL from '../api';
 
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
+
 const Dashboard = () => {
-  const { currentUser, token } = useAuth();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [result, setResult] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     const fetchResult = async () => {
+      if (!currentUser?.email) return setLoading(false);
       try {
-        const res = await axios.get(`${API_BASE_URL}/results/my-result`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setResult(res.data);
+        const q = query(collection(db, "students_results"), where("email", "==", currentUser.email));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          setResult(querySnapshot.docs[0].data());
+        }
       } catch (err) {
-        console.log("No result yet or error");
+        console.log("No result yet or error", err);
       } finally {
         setLoading(false);
       }
     };
-    if (token) fetchResult();
+    if (currentUser) fetchResult();
     else setLoading(false);
-  }, [token]);
+  }, [currentUser]);
 
   const sections = [
     { name: 'Verbal Ability', qcount: 15, time: 15, section: 'A: Foundation' },

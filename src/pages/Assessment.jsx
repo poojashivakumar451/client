@@ -18,6 +18,8 @@ import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import API_BASE_URL from '../api';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 const Assessment = () => {
   const navigate = useNavigate();
@@ -219,7 +221,6 @@ const Assessment = () => {
   const questionKey = `${currentSection.id}-${currentQuestionIdx}`;
 
   const handleOptionSelect = (optionIdx) => {
-    if (answers[questionKey] !== undefined) return;
     setAnswers({ ...answers, [questionKey]: optionIdx });
   };
 
@@ -281,14 +282,51 @@ const Assessment = () => {
       }, 0);
 
       const percentage = ((totalCorrect / totalPossible) * 100).toFixed(2);
+      const status = percentage >= 40 ? 'PASS' : 'FAIL';
 
-      await axios.post(`${API_BASE_URL}/results/submit`, {
-        sectionScores: sectionBreakdown,
-        totalScore: totalCorrect,
-        percentage: percentage
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+      // Create a detailed result object with student info and question details
+      let detailedAnswers = [];
+      let totalWrong = 0;
+      
+      sections.forEach(section => {
+        if (section.id !== 'coding') {
+          section.questions.forEach((q, idx) => {
+            const key = `${section.id}-${idx}`;
+            if (answers[key] !== undefined) {
+               const isCorrect = answers[key] === q.correct;
+               if (!isCorrect) totalWrong++;
+               detailedAnswers.push({
+                 questionId: q.id,
+                 sectionTitle: section.title,
+                 questionText: q.text,
+                 userAnswer: answers[key],
+                 correctAnswer: q.correct,
+                 isCorrect: isCorrect
+               });
+            }
+          });
+        }
       });
+
+      const studentUser = JSON.parse(sessionStorage.getItem('studentUser') || '{}');
+      
+      const payload = {
+         name: studentUser.name || 'Unknown',
+         email: studentUser.email || 'unknown@example.com',
+         college: studentUser.college || 'Unknown',
+         usn: studentUser.usn || 'Unknown',
+         sectionScores: sectionBreakdown,
+         totalScore: totalCorrect,
+         percentage: percentage,
+         status: status,
+         totalAttempted: totalAttempted,
+         totalCorrect: totalCorrect,
+         totalWrong: totalWrong,
+         detailedAnswers: detailedAnswers,
+         submittedAt: new Date().toISOString()
+      };
+
+      await addDoc(collection(db, "students_results"), payload);
 
       // Clear persistence on success
       localStorage.removeItem('assessment_answers');
@@ -433,8 +471,7 @@ const Assessment = () => {
         <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center gap-4 sm:gap-6 mb-6 sm:mb-8 text-xs font-bold uppercase tracking-wider text-slate-400 flex-wrap">
-              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500"></div>Correct : <span className="text-emerald-600">+ 4 marks</span></div>
-              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-400"></div>Incorrect : <span className="text-red-500">- 1 marks</span></div>
+              {/* Evaluation removed per request */}
             </div>
 
             {currentQuestion.type === 'mcq' ? (
@@ -444,25 +481,16 @@ const Assessment = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   {currentQuestion.options.map((option, idx) => {
                     const isSelected = answers[questionKey] === idx;
-                    const isCorrect = currentQuestion.correct === idx;
-                    const showFeedback = answers[questionKey] !== undefined;
                     let style = 'border-white bg-white hover:border-slate-200';
-                    let icon = null;
-                    if (showFeedback) {
-                      if (isCorrect) { style = 'border-emerald-500 bg-emerald-600 text-white'; icon = <CheckCircle2 className="w-5 h-5" />; }
-                      else if (isSelected) { style = 'border-red-400 bg-red-500 text-white'; icon = <X className="w-5 h-5" />; }
-                      else { style = 'border-slate-100 bg-slate-50 text-slate-300 opacity-50'; }
-                    } else if (isSelected) { style = 'border-indigo-500 bg-indigo-50'; }
+                    if (isSelected) { style = 'border-indigo-500 bg-indigo-50'; }
                     return (
-                      <button key={idx} onClick={() => handleOptionSelect(idx)} disabled={showFeedback} className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl text-left flex items-center justify-between transition-all border-2 shadow-sm gap-2 ${style}`}>
+                      <button key={idx} onClick={() => handleOptionSelect(idx)} className={`p-4 sm:p-6 rounded-xl sm:rounded-2xl text-left flex items-center justify-between transition-all border-2 shadow-sm gap-2 ${style}`}>
                         <div className="flex items-center gap-3 sm:gap-4">
-                          <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${showFeedback ? 'border-white' : 'border-slate-200'}`}>
-                            {(isSelected || (showFeedback && isCorrect)) && <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${showFeedback ? 'bg-white' : 'bg-indigo-600'}`} />}
+                          <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 flex items-center justify-center shrink-0 border-slate-200`}>
+                            {isSelected && <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-indigo-600`} />}
                           </div>
                           <span className="text-sm sm:text-base md:text-lg font-bold">{option}</span>
                         </div>
-                        {icon}
-                        {showFeedback && <span className="text-[10px] font-black opacity-30 tracking-widest shrink-0">{isCorrect ? '33.63%' : '26.27%'}</span>}
                       </button>
                     );
                   })}

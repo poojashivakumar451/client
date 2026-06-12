@@ -7,18 +7,23 @@ import {
   Award, Hash, CheckCircle2, XCircle 
 } from 'lucide-react';
 
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
+
 const Result = () => {
-  const { currentUser, token } = useAuth();
+  const { currentUser } = useAuth();
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchResult = async () => {
+      if (!currentUser?.email) return setLoading(false);
       try {
-        const res = await axios.get(`${API_BASE_URL}/results/my-result`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setResult(res.data);
+        const q = query(collection(db, "students_results"), where("email", "==", currentUser.email));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          setResult(querySnapshot.docs[0].data());
+        }
       } catch (err) {
         console.error("Result fetch error", err);
       } finally {
@@ -26,7 +31,7 @@ const Result = () => {
       }
     };
     if (currentUser) fetchResult();
-  }, [currentUser, token]);
+  }, [currentUser]);
 
   if (loading) return <div className="h-screen flex items-center justify-center font-bold text-slate-400 animate-pulse uppercase tracking-widest">Generating Scorecard...</div>;
 
