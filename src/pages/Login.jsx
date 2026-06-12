@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { LogIn, Mail, Lock, ShieldCheck, User, Building, Hash } from 'lucide-react';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 const Login = () => {
   const [name, setName] = useState('');
@@ -33,8 +35,16 @@ const Login = () => {
     }
 
     try {
-      // Passcode requirement removed for students
-      const studentData = { name, email, college, usn, role: 'student' };
+      const studentData = { name, email, college, usn, role: 'student', registeredAt: new Date().toISOString() };
+      
+      // Store in Firebase immediately so admins can see who registered
+      try {
+        await addDoc(collection(db, "registered_students"), studentData);
+      } catch (fbError) {
+        console.error("Firebase registration error: ", fbError);
+        // Continue even if logging fails
+      }
+
       sessionStorage.setItem('studentUser', JSON.stringify(studentData));
       toast.success('Registration Successful! Starting Assessment...');
       window.location.href = '/';
